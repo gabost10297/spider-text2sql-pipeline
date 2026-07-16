@@ -20,6 +20,27 @@ services:
     # docker compose run --rm phase1 python -m src.phase1.download_spider
     command: ["python", "-m", "src.phase1.explore_spider"]
 
+  browser:
+    image: spider-text2sql:phase1
+    container_name: spider-browser
+    working_dir: /app
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - hf_cache:/app/.cache/huggingface
+    environment:
+      - PYTHONPATH=/app
+      - SPIDER_DATA_DIR=/app/data
+    ports:
+      - "8501:8501"
+    command:
+      - streamlit
+      - run
+      - src/phase1/browser/Home.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.headless=true
+
   # Interactive shell for ad-hoc investigation
   shell:
     image: spider-text2sql:phase1
