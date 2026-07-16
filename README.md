@@ -2,7 +2,7 @@
 
 Autonomous Text-to-SQL LLM agent pipeline on the [Spider](https://yale-lily.github.io/spider) benchmark: schema linking → QLoRA fine-tuning → execution accuracy → agentic self-correction → FastAPI + Streamlit.
 
-Phase 1 runs entirely in **Docker** (no local venv required).
+Phases 1–2 run entirely in **Docker** (no local venv required).
 
 ## Prerequisites
 
@@ -41,7 +41,7 @@ Prints split sizes, a sample record (`question` / `db_id` / `query`), complexity
 
 ### 4. Browse the data (UI)
 
-Streamlit app with three pages: Splits Browser, Schema Explorer, and SQLite Query Runner.
+Streamlit app with five pages: Splits Browser, Schema Explorer, SQLite Query Runner, Linked Schemas, and Prompt Viewer.
 
 ```powershell
 docker compose up -d browser
@@ -63,6 +63,61 @@ Requires the download step first; without data the home page shows a warning.
 docker compose --profile tools run --rm shell
 ```
 
+## Phase 2 — Schema linking & prompt formulation
+
+Requires Phase 1 data under `./data` (parquet splits + SQLite databases).
+
+### 1. Schema linker
+
+Serialises each SQLite catalog (tables, columns, types, foreign keys) into prompt text.
+
+```powershell
+# one database → stdout
+docker compose run --rm phase1 python -m src.phase2.schema_linker concert_singer
+
+# one database → file
+docker compose run --rm phase1 python -m src.phase2.schema_linker concert_singer --out data/spider/schemas/concert_singer.txt
+
+# every database → one {db_id}.txt each
+docker compose run --rm phase1 python -m src.phase2.schema_linker --all --out data/spider/schemas
+```
+
+### 2. Instruction prompt templates
+
+Builds Llama-3 Instruct chat prompts (system + schema/question + `SQL: …`).
+
+```powershell
+# preview train[0] (training prompt with golden SQL)
+docker compose run --rm phase1 python -m src.phase2.prompts --from-parquet train --index 0
+
+# inference-style (no golden SQL in the prompt)
+docker compose run --rm phase1 python -m src.phase2.prompts --from-parquet train --index 0 --inference
+
+# ad-hoc
+docker compose run --rm phase1 python -m src.phase2.prompts --db-id concert_singer --question "How many singers do we have?"
+```
+
+Python API (inside the container / `python` REPL, not PowerShell):
+
+```python
+from src.phase2.prompts import generate_training_prompt, generate_prompt_for_example
+```
+
+### 3. Training records
+
+Export formatted examples for train + validation (JSONL: `db_id`, `question`, `query`, `prompt`):
+
+```powershell
+docker compose run --rm phase1 python -m src.phase2.prompts --export-all
+```
+
+Single split:
+
+```powershell
+docker compose run --rm phase1 python -m src.phase2.prompts --export-split train
+docker compose run --rm phase1 python -m src.phase2.prompts --export-split validation
+```
+
 ## Data layout
 
 ```text
@@ -72,6 +127,8 @@ data/
     tables.json
     spider_data.zip         # cached archive
     .download_complete
+    schemas/                # Phase 2: {db_id}.txt schema dumps
+    prompts/                # Phase 2: train.jsonl, validation.jsonl
   databases/
     {db_id}/{db_id}.sqlite  # same path convention as the FastAPI blueprint
 ```
@@ -81,20 +138,25 @@ data/
 ```text
 Dockerfile
 docker-compose.yml
-requirements.txt            # Phase 1 deps (incl. Streamlit)
+requirements.txt            # Phase 1–2 deps (incl. Streamlit)
 src/phase1/
   download_spider.py
   explore_spider.py
   paths.py
   browser/
-    Home.py                 # Streamlit entry point
+    Home.py
     pages/
       1_Splits_Browser.py
       2_Schema_Explorer.py
       3_SQLite_Query.py
+      4_Linked_Schemas.py
+      5_Prompt_Viewer.py
+src/phase2/
+  schema_linker.py
+  prompts.py
 scripts/phase1.sh
 ```
 
-## Next (Phase 2)
+## Next (Phase 3)
 
-Automated schema linking + Llama-3 instruction prompt templates, still runnable via Docker (GPU compose profile comes with Phase 3 / QLoRA).
+Parameter-efficient fine-tuning (QLoRA / Unsloth) on the exported prompts, including a PyTorch dataset with loss masking (`-100` on prompt tokens, loss only on SQL). Needs a GPU compose profile.
