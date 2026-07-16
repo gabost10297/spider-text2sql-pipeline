@@ -12,7 +12,7 @@ SCHEMAS_DIR = DATA_ROOT / "spider" / "schemas"
 
 st.set_page_config(page_title="Linked Schemas", layout="wide")
 st.title("Linked Schemas")
-st.caption("Phase 2 — schema linker output used inside LLM prompts")
+st.caption("Schema linker output used inside LLM prompts")
 
 db_ids = list_db_ids()
 if not db_ids:

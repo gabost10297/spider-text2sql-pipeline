@@ -10,3 +10,10 @@ tqdm>=4.66.0
 rich>=13.7.0
 ipython>=8.25.0
 streamlit>=1.35.0
+
+# Phase 3 — tokenizer + PyTorch dataset (Unsloth/CUDA image later for training)
+transformers>=4.43.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
+torch>=2.2.0
+

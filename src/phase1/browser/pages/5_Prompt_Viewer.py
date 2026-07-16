@@ -17,7 +17,7 @@ PROMPTS_DIR = DATA_ROOT / "spider" / "prompts"
 
 st.set_page_config(page_title="Prompt Viewer", layout="wide")
 st.title("Prompt Viewer")
-st.caption("Phase 2 — Llama-3 Instruct training / inference prompts")
+st.caption("Llama-3 Instruct training / inference prompts")
 
 
 @st.cache_data(show_spinner="Loading parquet…")

@@ -1,1 +1,1 @@
-"""Phase 2: schema linking and prompt formulation."""
+"""Schema linking and prompt formulation."""
