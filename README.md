@@ -138,7 +138,7 @@ data/
 ```text
 Dockerfile
 docker-compose.yml
-requirements.txt            # Phase 1–2 deps (incl. Streamlit)
+requirements.txt            # Phase 1–3 deps (Streamlit, transformers, torch)
 src/phase1/
   download_spider.py
   explore_spider.py
@@ -154,9 +154,41 @@ src/phase1/
 src/phase2/
   schema_linker.py
   prompts.py
+src/phase3/
+  tokenizer.py              # Llama-3 Instruct tokenizer inspect/demo
+  dataset.py                # PyTorch Dataset + -100 loss masking
 scripts/phase1.sh
 ```
 
-## Next (Phase 3)
+## Phase 3 — Tokenizer & Dataset (pre-training)
 
-Parameter-efficient fine-tuning (QLoRA / Unsloth) on the exported prompts, including a PyTorch dataset with loss masking (`-100` on prompt tokens, loss only on SQL). Needs a GPU compose profile.
+Default tokenizer Hub id: `unsloth/llama-3-8b-Instruct` (override with `$TOKENIZER_ID`). Rebuild after dependency changes:
+
+```powershell
+docker compose build phase1
+```
+
+### 1. Tokenizer
+
+```powershell
+docker compose run --rm phase1 python -m src.phase3.tokenizer --demo
+docker compose run --rm phase1 python -m src.phase3.tokenizer --from-parquet train --index 0
+```
+
+Official Meta weights/tokenizer are gated — use `$HF_TOKEN` after accepting the license, or keep the Unsloth default.
+
+### 2. Dataset + loss masking
+
+Builds `input_ids` / `attention_mask` / `labels` where prompt tokens are `-100` (ignored by CrossEntropyLoss) and only SQL (+ EOT) tokens are supervised.
+
+```powershell
+# one example report
+docker compose run --rm phase1 python -m src.phase3.dataset --from-parquet train --index 0
+
+# small Dataset smoke test
+docker compose run --rm phase1 python -m src.phase3.dataset --dataset train --limit 4
+```
+
+### Still to come
+
+QLoRA / Unsloth fine-tuning loop (GPU compose profile), then execution eval + agent loop.

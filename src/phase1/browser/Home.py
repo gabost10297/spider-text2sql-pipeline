@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 st.title("Spider Dataset Browser")
-st.caption("Phase 1–2 — local data & prompt explorer")
+st.caption("Local data & prompt explorer")
 
 # ── Phase 1 status ────────────────────────────────────────────────────────────
 st.subheader("Phase 1")
@@ -101,8 +101,8 @@ st.markdown(
 | **Splits Browser** | Page through train / validation Q+SQL pairs |
 | **Schema Explorer** | Tables, columns, PKs, FKs from `tables.json` |
 | **SQLite Query** | Run ad-hoc SQL against any local database |
-| **Linked Schemas** | Phase 2 schema-linker text (live or cached `.txt`) |
-| **Prompt Viewer** | Phase 2 Llama-3 prompts (JSONL or generate live) |
+| **Linked Schemas** | Schema-linker text (live or cached `.txt`) |
+| **Prompt Viewer** | Llama-3 prompts (JSONL or generate live) |
 
 Use the sidebar to navigate.
 """
