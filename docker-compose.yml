@@ -1,0 +1,43 @@
+services:
+  phase1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spider-text2sql:phase1
+    container_name: spider-phase1
+    working_dir: /app
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - hf_cache:/app/.cache/huggingface
+    environment:
+      - PYTHONPATH=/app
+      - HF_HOME=/app/.cache/huggingface
+      - DATASETS_CACHE=/app/.cache/huggingface/datasets
+      - SPIDER_DATA_DIR=/app/data
+    # Override at runtime, e.g.:
+    # docker compose run --rm phase1 python -m src.phase1.download_spider
+    command: ["python", "-m", "src.phase1.explore_spider"]
+
+  # Interactive shell for ad-hoc investigation
+  shell:
+    image: spider-text2sql:phase1
+    profiles: ["tools"]
+    working_dir: /app
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - hf_cache:/app/.cache/huggingface
+    environment:
+      - PYTHONPATH=/app
+      - HF_HOME=/app/.cache/huggingface
+      - DATASETS_CACHE=/app/.cache/huggingface/datasets
+      - SPIDER_DATA_DIR=/app/data
+    entrypoint: ["/bin/bash"]
+    stdin_open: true
+    tty: true
+
+volumes:
+  hf_cache:
