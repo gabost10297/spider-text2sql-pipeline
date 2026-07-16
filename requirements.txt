@@ -9,3 +9,4 @@ pyarrow>=15.0.0
 tqdm>=4.66.0
 rich>=13.7.0
 ipython>=8.25.0
+streamlit>=1.35.0
