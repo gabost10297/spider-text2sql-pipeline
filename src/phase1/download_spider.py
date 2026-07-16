@@ -36,7 +36,6 @@ from src.phase1.paths import (
 console = Console()
 
 HF_DATASET_ID = "xlangai/spider"
-# Re-host of Yale Spider SQLite DBs + tables.json (CC-BY-SA-4.0), pinable by commit.
 HF_DB_REPO_ID = "HAL-9001/spider-databases"
 HF_DB_FILENAME = "spider_data.zip"
 
